@@ -87,6 +87,11 @@ class LaneFilterNode(object):
         
         old_matrix_delta_d = self.matrix_delta_d
         old_matrix_delta_phi = self.matrix_delta_phi
+
+        #updating lane_offset
+        self.lane_offset = rospy.get_param('~lane_offset', True)
+
+        #updating matrix parameter delta_d and delta_phi
         self.matrix_delta_d = rospy.get_param('~matrix_delta_d', True)
         self.matrix_delta_phi = rospy.get_param('~matrix_delta_phi', True)
         # self.loginfo('verbose = %r' % self.verbose)
@@ -125,7 +130,7 @@ class LaneFilterNode(object):
 
         # Step 2: update
 
-        self.filter.update(segment_list_msg.segments)
+        self.filter.update(segment_list_msg.segments, self.lane_offset)
 
         # Step 3: build messages and publish things
         [d_max, phi_max] = self.filter.getEstimate()

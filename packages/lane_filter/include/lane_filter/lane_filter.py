@@ -235,7 +235,8 @@ class LaneFilterHistogram(Configurable, LaneFilterInterface):
                 self.range_arr[i] = self.range_min + (i * range_diff)
 
     # generate the belief arrays
-    def update(self, segments):
+    def update(self, segments, lane_offset):
+        self.center_lane_offset = lane_offset
         # prepare the segments for each belief array
         segmentsRangeArray = self.prepareSegments(segments)
         #rospy.loginfo('segmentsRangeArray: %s' % len(segmentsRangeArray[0]))
@@ -350,15 +351,14 @@ class LaneFilterHistogram(Configurable, LaneFilterInterface):
         l_i = (l1 + l2) / 2
         d_i = (d1 + d2) / 2
         phi_i = np.arcsin(t_hat[1])
+        
         if segment.color == segment.WHITE:  # right lane is white
             if(p1[0] > p2[0]):  # right edge of white lane
                 d_i = d_i - self.linewidth_white
             else:  # left edge of white lane
-
                 d_i = - d_i
-
                 phi_i = -phi_i
-            d_i = d_i - self.lanewidth / 2
+            d_i = d_i - self.lanewidth
 
         elif segment.color == segment.YELLOW:  # left lane is yellow
             if (p2[0] > p1[0]):  # left edge of yellow lane
@@ -366,13 +366,13 @@ class LaneFilterHistogram(Configurable, LaneFilterInterface):
                 phi_i = -phi_i
             else:  # right edge of white lane
                 d_i = -d_i
-            d_i = self.lanewidth / 2 - d_i
+            d_i = - d_i
 
         # weight = distance
         weight = 1
 
-        #english driver parameter TODO: make real parameter
-        #d_i -= self.lanewidth
+        #english driver parameter
+        d_i += self.center_lane_offset
 
         return d_i, phi_i, l_i, weight
 
