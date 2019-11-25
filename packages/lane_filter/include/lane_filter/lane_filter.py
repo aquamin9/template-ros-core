@@ -86,7 +86,10 @@ class LaneFilterHistogram(Configurable, LaneFilterInterface):
         self.phi_med_arr = []
         self.median_filter_size = 5
 
-        self.update_matrix(self.delta_d, self.delta_phi)
+        self.default_delta_d = self.delta_d
+        self.default_delta_phi = self.delta_phi
+
+        self.update_matrix(1) #1 is initial value matrix_mash_size
         self.initialize()
         self.updateRangeArray(self.curvature_res)
 
@@ -97,11 +100,12 @@ class LaneFilterHistogram(Configurable, LaneFilterInterface):
         self.range_est_min = 0
         self.filtered_segments = []
 
-    def update_matrix(self, param_delta_d, param_delta_phi):
-        self.delta_d = param_delta_d
-        self.delta_phi = param_delta_phi
-        self.d, self.phi = np.mgrid[self.d_min:self.d_max:param_delta_d,
-                                    self.phi_min:self.phi_max:param_delta_phi]
+    def update_matrix(self, param_mesh_size):
+
+        self.delta_d = self.default_delta_d * param_mesh_size
+        self.delta_phi = self.default_delta_phi * param_mesh_size
+        self.d, self.phi = np.mgrid[self.d_min:self.d_max:self.delta_d,
+                                    self.phi_min:self.phi_max:self.delta_phi]
         self.updateRangeArray(self.curvature_res)       
 
     def getStatus(self):
@@ -146,7 +150,7 @@ class LaneFilterHistogram(Configurable, LaneFilterInterface):
         d_t = self.d + v * delta_t * np.sin(self.phi)
         phi_t = self.phi + w * delta_t
 
-        for k in range(self.curvature_res):
+        for k in range(self.curvature_res+1):
             p_belief = np.zeros(self.beliefArray[k].shape)
 
             # there has got to be a better/cleaner way to do this - just applying the process model to translate each cell value
@@ -351,7 +355,7 @@ class LaneFilterHistogram(Configurable, LaneFilterInterface):
         l_i = (l1 + l2) / 2
         d_i = (d1 + d2) / 2
         phi_i = np.arcsin(t_hat[1])
-        
+
         if segment.color == segment.WHITE:  # right lane is white
             if(p1[0] > p2[0]):  # right edge of white lane
                 d_i = d_i - self.linewidth_white

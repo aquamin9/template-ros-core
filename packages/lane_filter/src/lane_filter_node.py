@@ -16,6 +16,7 @@ class LaneFilterNode(object):
         self.filter = None
         self.matrix_delta_d = 0.2
         self.matrix_delta_phi = 0.1
+        self.matrix_mesh_size = 1
         self.updateParams(None)
 
         self.t_last_update = rospy.get_time()
@@ -46,7 +47,7 @@ class LaneFilterNode(object):
         self.pub_ml_img = rospy.Publisher("~ml_img", Image, queue_size=1)
 
 
-        self.pub_entropy    = rospy.Publisher("~entropy",Float32, queue_size=1)
+        self.pub_entropy = rospy.Publisher("~entropy",Float32, queue_size=1)
 
 
         # FSM
@@ -85,21 +86,29 @@ class LaneFilterNode(object):
             self.loginfo('new filter config: %s' % str(c))
             self.filter = instantiate(c[0], c[1])
         
-        old_matrix_delta_d = self.matrix_delta_d
-        old_matrix_delta_phi = self.matrix_delta_phi
+#        old_matrix_delta_d = self.matrix_delta_d
+#        old_matrix_delta_phi = self.matrix_delta_phi
+        old_matrix_mesh_size = self.matrix_mesh_size
 
         #updating lane_offset
         self.lane_offset = rospy.get_param('~lane_offset', True)
 
         #updating matrix parameter delta_d and delta_phi
-        self.matrix_delta_d = rospy.get_param('~matrix_delta_d', True)
-        self.matrix_delta_phi = rospy.get_param('~matrix_delta_phi', True)
+        self.matrix_mesh_size = rospy.get_param('~matrix_mesh_size', True)
+#        self.matrix_delta_d = rospy.get_param('~matrix_delta_d', True)
+#        self.matrix_delta_phi = rospy.get_param('~matrix_delta_phi', True)
         # self.loginfo('verbose = %r' % self.verbose)
 
         #changing the size of belief and masurement likelihood matrix
-        if self.matrix_delta_d != old_matrix_delta_d or self.matrix_delta_phi != old_matrix_delta_phi:
-            self.filter.update_matrix(self.matrix_delta_d, self.matrix_delta_phi)
-            self.loginfo('matrix_delta_d %r' % self.matrix_delta_d)
+ #       if self.matrix_delta_d != old_matrix_delta_d or self.matrix_delta_phi != old_matrix_delta_phi:
+ #           self.filter.update_matrix(self.matrix_delta_d, self.matrix_delta_phi)
+ #           self.loginfo('matrix_delta_d %r' % self.matrix_delta_d)
+
+        #changing the size of belief and masurement likelihood matrix
+        if self.matrix_mesh_size != old_matrix_mesh_size:
+            self.filter.update_matrix(self.matrix_mesh_size)
+            self.loginfo('matrix_mesh_size %r' % self.matrix_mesh_size)
+
 
     def cbSwitch(self, switch_msg):
         self.active = switch_msg.data
